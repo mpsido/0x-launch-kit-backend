@@ -1,0 +1,14 @@
+{
+   "type": "postgres",
+   "host": "localhost",
+   "port": 5432,
+   "username": "postgres",
+   "password": "docker",
+   "database": "dex",
+   "synchronize": true,
+   "logging": true,
+    "entities": ["ts/lib/entity/**/*.js", "js/entity/**/*.js"],
+    "cli": {
+        "entitiesDir": "ts/lib/entity"
+    }
+}

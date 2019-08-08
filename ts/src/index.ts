@@ -2,6 +2,8 @@ import '@babel/polyfill';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
+import * as https from 'https';
+import * as fs from 'fs';
 import * as asyncHandler from 'express-async-handler';
 import 'reflect-metadata';
 
@@ -59,7 +61,10 @@ import { utils } from './utils';
 
     app.use(errorHandler);
 
-    app.listen(config.HTTP_PORT, () => {
+    https.createServer({
+      key: fs.readFileSync('encryption/private.key'),
+      cert: fs.readFileSync('encryption/certificate.crt')
+    }, app).listen(config.HTTP_PORT, () => {
         utils.log(
             `Standard relayer API (HTTP) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
                 config,

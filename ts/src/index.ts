@@ -1,4 +1,5 @@
 import '@babel/polyfill';
+import * as _ from 'lodash';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
@@ -19,7 +20,11 @@ import { utils } from './utils';
     const handlers = new Handlers();
     await handlers.initOrderBookAsync();
     const app = express();
-    app.use(cors());
+    const corsOptions = {
+        origin: ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io'],
+        optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+    };
+    app.use(cors(corsOptions));
     app.use(bodyParser.json());
     app.use(urlParamsParsing);
 
@@ -61,16 +66,35 @@ import { utils } from './utils';
 
     app.use(errorHandler);
 
-    https.createServer({
-      key: fs.readFileSync('encryption/private.key'),
-      cert: fs.readFileSync('encryption/certificate.crt')
-    }, app).listen(config.HTTP_PORT, () => {
-        utils.log(
-            `Standard relayer API (HTTP) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
-                config,
-                null,
-                2,
-            )}`,
-        );
-    });
+    const USE_HTTPS = _.isEmpty(process.env.USE_HTTPS) ? false : process.env.USE_HTTPS == 'true';
+    console.log("Using https:", USE_HTTPS, process.env.USE_HTTPS);
+    if (USE_HTTPS) {
+        https
+            .createServer(
+                {
+                    key: fs.readFileSync('encryption/private.key'),
+                    cert: fs.readFileSync('encryption/certificate.crt'),
+                },
+                app,
+            )
+            .listen(config.HTTP_PORT, () => {
+                utils.log(
+                    `Standard relayer API (HTTPS) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
+                        config,
+                        null,
+                        2,
+                    )}`,
+                );
+            });
+    } else {
+        app.listen(config.HTTP_PORT, () => {
+            utils.log(
+                `Standard relayer API (HTTP) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
+                    config,
+                    null,
+                    2,
+                )}`,
+            );
+        });
+    }
 })().catch(utils.log);

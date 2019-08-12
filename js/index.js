@@ -4,6 +4,8 @@ require('@babel/polyfill');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const asyncHandler = require('express-async-handler');
 require('reflect-metadata');
 const config = require('./config');
@@ -56,13 +58,21 @@ const utils_1 = require('./utils');
      */
     app.get('/v2/order/:orderHash', asyncHandler(handlers_1.Handlers.getOrderByHashAsync.bind(handlers_1.Handlers)));
     app.use(error_handling_1.errorHandler);
-    app.listen(config.HTTP_PORT, () => {
-        utils_1.utils.log(
-            `Standard relayer API (HTTP) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
-                config,
-                null,
-                2,
-            )}`,
-        );
-    });
+    https
+        .createServer(
+            {
+                key: fs.readFileSync('encryption/private.key'),
+                cert: fs.readFileSync('encryption/certificate.crt'),
+            },
+            app,
+        )
+        .listen(config.HTTP_PORT, () => {
+            utils_1.utils.log(
+                `Standard relayer API (HTTP) listening on port ${config.HTTP_PORT}!\nConfig: ${JSON.stringify(
+                    config,
+                    null,
+                    2,
+                )}`,
+            );
+        });
 })().catch(utils_1.utils.log);

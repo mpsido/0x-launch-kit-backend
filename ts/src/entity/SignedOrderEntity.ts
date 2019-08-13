@@ -1,6 +1,6 @@
 import { EntitySchema } from 'typeorm';
 
-import { SignedOrderModel } from '../models/SignedOrderModel';
+import { SignedOrderModel, SignedOrderArchiveModel } from '../models/SignedOrderModel';
 
 export const signedOrderEntity = new EntitySchema<SignedOrderModel>({
     name: 'SignedOrder',
@@ -50,6 +50,65 @@ export const signedOrderEntity = new EntitySchema<SignedOrderModel>({
             type: 'varchar',
         },
         signature: {
+            type: 'varchar',
+        },
+    },
+});
+
+export const signedOrderArchiveModelEntity = new EntitySchema<SignedOrderArchiveModel>({
+    name: 'SignedOrderArchive',
+    target: SignedOrderArchiveModel,
+    columns: {
+        hash: {
+            primary: true,
+            type: 'varchar',
+        },
+        senderAddress: {
+            type: 'varchar',
+        },
+        makerAddress: {
+            type: 'varchar',
+        },
+        takerAddress: {
+            type: 'varchar',
+        },
+        makerAssetData: {
+            type: 'varchar',
+        },
+        takerAssetData: {
+            type: 'varchar',
+        },
+        exchangeAddress: {
+            type: 'varchar',
+        },
+        feeRecipientAddress: {
+            type: 'varchar',
+        },
+        expirationTimeSeconds: {
+            type: 'int',
+        },
+        makerFee: {
+            type: 'varchar',
+        },
+        takerFee: {
+            type: 'varchar',
+        },
+        makerAssetAmount: {
+            type: 'varchar',
+        },
+        takerAssetAmount: {
+            type: 'varchar',
+        },
+        salt: {
+            type: 'varchar',
+        },
+        signature: {
+            type: 'varchar',
+        },
+        orderTimestamp: {
+            type: 'varchar',
+        },
+        orderAction: {
             type: 'varchar',
         },
     },

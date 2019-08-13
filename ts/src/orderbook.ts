@@ -23,7 +23,7 @@ import {
 } from './config';
 import { MAX_TOKEN_SUPPLY_POSSIBLE } from './constants';
 import { getDBConnection } from './db_connection';
-import { SignedOrderModel } from './models/SignedOrderModel';
+import { EOrderAction, SignedOrderModel, SignedOrderArchiveModel } from './models/SignedOrderModel';
 import { paginate } from './paginator';
 import { utils } from './utils';
 
@@ -163,6 +163,8 @@ export class OrderBook {
         });
         await this._orderWatcher.addOrderAsync(signedOrder);
         const signedOrderModel = serializeOrder(signedOrder);
+        const signedOrderArchiveModel = serializeArchiveOrder(signedOrder);
+        await connection.manager.save(signedOrderArchiveModel);
         await connection.manager.save(signedOrderModel);
     }
     public async getOrderBookAsync(
@@ -361,4 +363,30 @@ const serializeOrder = (signedOrder: SignedOrder): SignedOrderModel => {
         hash: orderHashUtils.getOrderHashHex(signedOrder),
     });
     return signedOrderModel;
+};
+
+const serializeArchiveOrder = (signedOrder: SignedOrder): SignedOrderArchiveModel => {
+    const signedOrderModel = new SignedOrderModel({
+        signature: signedOrder.signature,
+        senderAddress: signedOrder.senderAddress,
+        makerAddress: signedOrder.makerAddress,
+        takerAddress: signedOrder.takerAddress,
+        makerFee: signedOrder.makerFee.toString(),
+        takerFee: signedOrder.takerFee.toString(),
+        makerAssetAmount: signedOrder.makerAssetAmount.toString(),
+        takerAssetAmount: signedOrder.takerAssetAmount.toString(),
+        makerAssetData: signedOrder.makerAssetData,
+        takerAssetData: signedOrder.takerAssetData,
+        salt: signedOrder.salt.toString(),
+        exchangeAddress: signedOrder.exchangeAddress,
+        feeRecipientAddress: signedOrder.feeRecipientAddress,
+        expirationTimeSeconds: signedOrder.expirationTimeSeconds.toNumber(),
+        hash: orderHashUtils.getOrderHashHex(signedOrder),
+    });
+    const signedOrderArchiveModel = new SignedOrderArchiveModel({
+        signedOrder: signedOrderModel,
+        orderTimestamp: new Date(),
+        orderAction: EOrderAction.EOrderCreate,
+    });
+    return signedOrderArchiveModel;
 };

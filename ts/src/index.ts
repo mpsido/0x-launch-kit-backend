@@ -22,6 +22,7 @@ import { utils } from './utils';
     const app = express();
     const corsOptions = {
         origin: ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io'],
+        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
         optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     };
     app.use(cors(corsOptions));
@@ -67,7 +68,7 @@ import { utils } from './utils';
     app.use(errorHandler);
 
     const USE_HTTPS = _.isEmpty(process.env.USE_HTTPS) ? false : process.env.USE_HTTPS == 'true';
-    console.log("Using https:", USE_HTTPS, process.env.USE_HTTPS);
+    console.log('Using https:', USE_HTTPS, process.env.USE_HTTPS);
     if (USE_HTTPS) {
         https
             .createServer(

@@ -1,10 +1,10 @@
 import { EntitySchema } from 'typeorm';
 
-import { SignedOrderModel } from '../models/SignedOrderModel';
+import { SignedOrderArchiveModel } from '../models/SignedOrderArchiveModel';
 
-export const signedOrderEntity = new EntitySchema<SignedOrderModel>({
-    name: 'SignedOrder',
-    target: SignedOrderModel,
+export const signedOrderArchiveModelEntity = new EntitySchema<SignedOrderArchiveModel>({
+    name: 'SignedOrderArchive',
+    target: SignedOrderArchiveModel,
     columns: {
         hash: {
             primary: true,
@@ -50,6 +50,12 @@ export const signedOrderEntity = new EntitySchema<SignedOrderModel>({
             type: 'varchar',
         },
         signature: {
+            type: 'varchar',
+        },
+        orderTimestamp: {
+            type: 'varchar',
+        },
+        orderAction: {
             type: 'varchar',
         },
     },

@@ -23,7 +23,9 @@ import {
 } from './config';
 import { MAX_TOKEN_SUPPLY_POSSIBLE } from './constants';
 import { getDBConnection } from './db_connection';
-import { EOrderAction, SignedOrderModel, SignedOrderArchiveModel } from './models/SignedOrderModel';
+import { EOrderAction, SignedOrderArchiveModel } from './models/SignedOrderArchiveModel';
+import { SignedOrderModel } from './models/SignedOrderModel';
+import { UserModel } from './models/UserModel';
 import { paginate } from './paginator';
 import { utils } from './utils';
 
@@ -151,6 +153,14 @@ export class OrderBook {
         }
         if (!_.isEmpty(permanentlyExpiredOrders)) {
             const connection = getDBConnection();
+            const orders = (await connection.manager.find(SignedOrderModel, {
+                where: { hash: permanentlyExpiredOrders },
+            })) as Array<Required<SignedOrderModel>>;
+            const expiredOrderArchive = orders.map(order => {
+                const orderModel = order as SignedOrderModel;
+                return serializeArchiveOrderFromModel(orderModel, EOrderAction.EOrderExipired);
+            });
+            connection.manager.save(expiredOrderArchive);
             await connection.manager.delete(SignedOrderModel, permanentlyExpiredOrders);
         }
     }
@@ -158,13 +168,28 @@ export class OrderBook {
         const connection = getDBConnection();
         // Validate transfers to a non 0 default address. Some tokens cannot be transferred to
         // the null address (default)
+
+        const user = (await connection.manager.findOne(UserModel, {
+            where: { userAddress: signedOrder.makerAddress },
+        })) as Required<UserModel | undefined>;
+        if (user && user.isBanned) {
+            throw new Error('User is banned');
+        }
         await this._contractWrappers.exchange.validateOrderFillableOrThrowAsync(signedOrder, {
             simulationTakerAddress: DEFAULT_TAKER_SIMULATION_ADDRESS,
         });
         await this._orderWatcher.addOrderAsync(signedOrder);
         const signedOrderModel = serializeOrder(signedOrder);
-        const signedOrderArchiveModel = serializeArchiveOrder(signedOrder);
-        await connection.manager.save(signedOrderArchiveModel);
+        const signedOrderArchiveModel = serializeArchiveOrder(signedOrder, EOrderAction.EOrderCreate);
+        if (user === undefined) {
+            connection.manager.save(
+                new UserModel({
+                    userAddress: signedOrder.makerAddress,
+                    isBanned: false,
+                }),
+            );
+            connection.manager.save(signedOrderArchiveModel);
+        }
         await connection.manager.save(signedOrderModel);
     }
     public async getOrderBookAsync(
@@ -273,6 +298,7 @@ export class OrderBook {
                 await this._orderWatcher.addOrderAsync(signedOrder);
             } catch (err) {
                 const orderHash = orderHashUtils.getOrderHashHex(signedOrder);
+                connection.manager.delete(SignedOrderArchiveModel, orderHash);
                 await connection.manager.delete(SignedOrderModel, orderHash);
             }
         }
@@ -365,7 +391,7 @@ const serializeOrder = (signedOrder: SignedOrder): SignedOrderModel => {
     return signedOrderModel;
 };
 
-const serializeArchiveOrder = (signedOrder: SignedOrder): SignedOrderArchiveModel => {
+const serializeArchiveOrder = (signedOrder: SignedOrder, orderAction: EOrderAction): SignedOrderArchiveModel => {
     const signedOrderModel = new SignedOrderModel({
         signature: signedOrder.signature,
         senderAddress: signedOrder.senderAddress,
@@ -386,7 +412,19 @@ const serializeArchiveOrder = (signedOrder: SignedOrder): SignedOrderArchiveMode
     const signedOrderArchiveModel = new SignedOrderArchiveModel({
         signedOrder: signedOrderModel,
         orderTimestamp: new Date(),
-        orderAction: EOrderAction.EOrderCreate,
+        orderAction,
+    });
+    return signedOrderArchiveModel;
+};
+
+const serializeArchiveOrderFromModel = (
+    signedOrderModel: SignedOrderModel,
+    orderAction: EOrderAction,
+): SignedOrderArchiveModel => {
+    const signedOrderArchiveModel = new SignedOrderArchiveModel({
+        signedOrder: signedOrderModel,
+        orderTimestamp: new Date(),
+        orderAction,
     });
     return signedOrderArchiveModel;
 };

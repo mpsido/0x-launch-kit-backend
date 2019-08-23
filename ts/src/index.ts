@@ -1,18 +1,20 @@
 import '@babel/polyfill';
-import * as _ from 'lodash';
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
-import * as https from 'https';
-import * as fs from 'fs';
 import * as asyncHandler from 'express-async-handler';
+import * as fs from 'fs';
+import * as https from 'https';
+import * as _ from 'lodash';
 import 'reflect-metadata';
 
 import * as config from './config';
+import { login, signup } from './controllers/users';
 import { initDBConnectionAsync } from './db_connection';
 import { Handlers } from './handlers';
 import { errorHandler } from './middleware/error_handling';
 import { urlParamsParsing } from './middleware/url_params_parsing';
+// import { userMiddleware } from './middleware/users';
 import { utils } from './utils';
 
 (async () => {
@@ -21,8 +23,8 @@ import { utils } from './utils';
     await handlers.initOrderBookAsync();
     const app = express();
     const corsOptions = {
-        origin: ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io'],
-        methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+        origin: '*', // ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io'],
+        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     };
     app.use(cors(corsOptions));
@@ -65,10 +67,13 @@ import { utils } from './utils';
      */
     app.get('/v2/order/:orderHash', asyncHandler(Handlers.getOrderByHashAsync.bind(Handlers)));
 
+    app.post('/v2/signup', asyncHandler(signup));
+    app.post('/v2/login', asyncHandler(login));
+
     app.use(errorHandler);
 
-    const USE_HTTPS = _.isEmpty(process.env.USE_HTTPS) ? false : process.env.USE_HTTPS == 'true';
-    console.log('Using https:', USE_HTTPS, process.env.USE_HTTPS);
+    const USE_HTTPS = _.isEmpty(process.env.USE_HTTPS) ? false : process.env.USE_HTTPS === 'true';
+    utils.log('Using https:', USE_HTTPS, process.env.USE_HTTPS);
     if (USE_HTTPS) {
         https
             .createServer(

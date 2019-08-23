@@ -6,8 +6,15 @@ export const userEntity = new EntitySchema<UserModel>({
     name: 'User',
     target: UserModel,
     columns: {
-        userAddress: {
+        _id: {
+            type: 'int',
             primary: true,
+            generated: true,
+        },
+        email: {
+            type: 'varchar',
+        },
+        password: {
             type: 'varchar',
         },
         isBanned: {

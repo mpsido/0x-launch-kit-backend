@@ -47,7 +47,7 @@ export async function login(req: express.Request, res: express.Response): Promis
         return;
     }
     const tokenSecret = _.isEmpty(process.env.TOKEN_SECRET) ? 'RANDOM_SECRET' : (process.env.TOKEN_SECRET as string);
-    if (req.body.password !== user.password) {
+    if (bcrypt.compareSync(req.body.password, user.password as string) === false) {
         res.status(401).json({
             error: new Error('Incorrect password!'),
         });

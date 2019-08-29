@@ -3,8 +3,8 @@ import * as express from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
 
-import { getDBConnection } from '../db_connection';
-import { UserModel } from '../models/UserModel';
+import { getDBConnection } from './db_connection';
+import { UserModel } from './models/UserModel';
 
 export async function signup(req: express.Request, res: express.Response): Promise<void> {
     const tokenSalt = _.isEmpty(process.env.SALT) ? 10 : parseInt(process.env.SALT as string);

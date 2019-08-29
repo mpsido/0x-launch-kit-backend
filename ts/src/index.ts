@@ -9,7 +9,7 @@ import * as _ from 'lodash';
 import 'reflect-metadata';
 
 import * as config from './config';
-import { login, signup } from './controllers/users';
+import { login, signup } from './users';
 import { initDBConnectionAsync } from './db_connection';
 import { Handlers } from './handlers';
 import { errorHandler } from './middleware/error_handling';

@@ -33,7 +33,7 @@ export async function signup(req: express.Request, res: express.Response): Promi
         })
         .catch((error: Error) => {
             res.status(500).json({
-                error,
+                message: error,
             });
         });
 }
@@ -43,14 +43,14 @@ export async function login(req: express.Request, res: express.Response): Promis
     const user = await connection.manager.findOne(UserModel, { where: { email: req.body.email } });
     if (!user) {
         res.status(401).json({
-            error: new Error('User not found!'),
+            message: 'User not found!',
         });
         return;
     }
     const tokenSecret = _.isEmpty(process.env.TOKEN_SECRET) ? 'RANDOM_SECRET' : (process.env.TOKEN_SECRET as string);
     if (bcrypt.compareSync(req.body.password, user.password as string) === false) {
         res.status(401).json({
-            error: new Error('Incorrect password!'),
+            message: 'Incorrect password!',
         });
         return;
     }

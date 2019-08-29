@@ -11,6 +11,9 @@ export const userEntity = new EntitySchema<UserModel>({
             primary: true,
             generated: true,
         },
+        name: {
+            type: 'varchar',
+        },
         email: {
             type: 'varchar',
         },

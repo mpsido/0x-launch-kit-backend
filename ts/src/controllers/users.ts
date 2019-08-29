@@ -11,6 +11,7 @@ export async function signup(req: express.Request, res: express.Response): Promi
     const salt = bcrypt.genSaltSync(tokenSalt);
     const hash = bcrypt.hashSync(req.body.password, salt);
     const user = new UserModel({
+        name: req.body.name,
         email: req.body.email,
         password: hash,
         isBanned: false,

@@ -4,7 +4,7 @@ import * as jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
 
 import { getDBConnection } from './db_connection';
-import { UserModel } from './models/UserModel';
+import { UserModel } from './entity/UserModel';
 
 export async function signup(req: express.Request, res: express.Response): Promise<void> {
     const tokenSalt = _.isEmpty(process.env.SALT) ? 10 : parseInt(process.env.SALT as string);
@@ -15,6 +15,7 @@ export async function signup(req: express.Request, res: express.Response): Promi
         email: req.body.email,
         password: hash,
         isBanned: false,
+        orders: [],
     });
     const connection = getDBConnection();
     const userDb = await connection.manager.findOne(UserModel, { where: { email: req.body.email } });
@@ -33,7 +34,7 @@ export async function signup(req: express.Request, res: express.Response): Promi
         })
         .catch((error: Error) => {
             res.status(500).json({
-                message: error,
+                message: JSON.stringify(error),
             });
         });
 }

@@ -20,8 +20,8 @@ export function userMiddleware(req: express.Request, res: express.Response, next
         const token = request.authorization.split(' ')[1];
         utils.log(`User Middleware ${req.method}!`, token, request.userId);
         const decodedToken = jwt.verify(token, tokenSecret);
-        const userId = (req.query as any).userId;
-        if (req.query.userId && decodedToken != userId) {
+        const userId = request.userId;
+        if (request.userId && decodedToken != userId) {
             throw new Error('Invalid user ID');
         } else {
             utils.log('Authentication success');

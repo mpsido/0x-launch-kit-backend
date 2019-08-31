@@ -23,8 +23,9 @@ import {
 } from './config';
 import { MAX_TOKEN_SUPPLY_POSSIBLE } from './constants';
 import { getDBConnection } from './db_connection';
-import { EOrderAction, SignedOrderArchiveModel } from './models/SignedOrderArchiveModel';
-import { SignedOrderModel } from './models/SignedOrderModel';
+import { EOrderAction, SignedOrderArchiveModel } from './entity/SignedOrderArchiveModel';
+import { UserModel } from './entity/UserModel';
+import { SignedOrderModel } from './entity/SignedOrderModel';
 import { paginate } from './paginator';
 import { utils } from './utils';
 
@@ -157,13 +158,13 @@ export class OrderBook {
             })) as Array<Required<SignedOrderModel>>;
             const expiredOrderArchive = orders.map(order => {
                 const orderModel = order as SignedOrderModel;
-                return serializeArchiveOrderFromModel(orderModel, EOrderAction.EOrderExipired);
+                return serializeArchiveOrderFromModel(orderModel, EOrderAction.EOrderExipired, undefined);
             });
             connection.manager.save(expiredOrderArchive);
             await connection.manager.delete(SignedOrderModel, permanentlyExpiredOrders);
         }
     }
-    public async addOrderAsync(signedOrder: SignedOrder): Promise<void> {
+    public async addOrderAsync(signedOrder: SignedOrder, userId: number): Promise<void> {
         const connection = getDBConnection();
         // Validate transfers to a non 0 default address. Some tokens cannot be transferred to
         // the null address (default)
@@ -172,9 +173,18 @@ export class OrderBook {
         });
         await this._orderWatcher.addOrderAsync(signedOrder);
         const signedOrderModel = serializeOrder(signedOrder);
-        const signedOrderArchiveModel = serializeArchiveOrder(signedOrder, EOrderAction.EOrderCreate);
-        connection.manager.save(signedOrderArchiveModel);
-        await connection.manager.save(signedOrderModel);
+        console.log('UserId: ', userId);
+        let user = undefined;
+        try {
+            user = await connection.manager.findOne(UserModel, { where: { _id: userId } });
+        } catch {
+            user = undefined;
+        } finally {
+            console.log('Saving order from user', user);
+            const signedOrderArchiveModel = serializeArchiveOrder(signedOrder, EOrderAction.EOrderCreate, user);
+            connection.manager.save(signedOrderArchiveModel);
+            await connection.manager.save(signedOrderModel);
+        }
     }
     public async getOrderBookAsync(
         page: number,
@@ -375,7 +385,11 @@ const serializeOrder = (signedOrder: SignedOrder): SignedOrderModel => {
     return signedOrderModel;
 };
 
-const serializeArchiveOrder = (signedOrder: SignedOrder, orderAction: EOrderAction): SignedOrderArchiveModel => {
+const serializeArchiveOrder = (
+    signedOrder: SignedOrder,
+    orderAction: EOrderAction,
+    user: UserModel | undefined,
+): SignedOrderArchiveModel => {
     const signedOrderModel = new SignedOrderModel({
         signature: signedOrder.signature,
         senderAddress: signedOrder.senderAddress,
@@ -397,6 +411,7 @@ const serializeArchiveOrder = (signedOrder: SignedOrder, orderAction: EOrderActi
         signedOrder: signedOrderModel,
         orderTimestamp: new Date(),
         orderAction,
+        user,
     });
     return signedOrderArchiveModel;
 };
@@ -404,11 +419,13 @@ const serializeArchiveOrder = (signedOrder: SignedOrder, orderAction: EOrderActi
 const serializeArchiveOrderFromModel = (
     signedOrderModel: SignedOrderModel,
     orderAction: EOrderAction,
+    user: UserModel | undefined,
 ): SignedOrderArchiveModel => {
     const signedOrderArchiveModel = new SignedOrderArchiveModel({
         signedOrder: signedOrderModel,
         orderTimestamp: new Date(),
         orderAction,
+        user,
     });
     return signedOrderArchiveModel;
 };

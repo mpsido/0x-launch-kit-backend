@@ -1,3 +1,5 @@
+import { Entity, Column, ManyToOne } from 'typeorm';
+import { UserModel } from './UserModel';
 import { SignedOrderModel } from './SignedOrderModel';
 
 export enum EOrderAction {
@@ -7,19 +9,29 @@ export enum EOrderAction {
     EOrderPartialFill = 'PartialFill',
     EOrderFill = 'Fill',
 }
+
+@Entity()
 export class SignedOrderArchiveModel extends SignedOrderModel {
-    public orderTimestamp?: Date;
-    public orderAction?: EOrderAction;
+    @Column()
+    orderTimestamp?: Date;
+
+    @Column()
+    orderAction?: string;
+
+    @ManyToOne(() => UserModel, (oclass: UserModel) => oclass.orders)
+    user?: UserModel;
 
     constructor(
         opts: {
             signedOrder?: SignedOrderModel;
             orderTimestamp?: Date;
             orderAction?: EOrderAction;
+            user?: UserModel;
         } = {},
     ) {
         super(opts.signedOrder);
-        this.orderAction = opts.orderAction;
         this.orderTimestamp = opts.orderTimestamp;
+        this.orderAction = opts.orderAction;
+        this.user = opts.user;
     }
 }

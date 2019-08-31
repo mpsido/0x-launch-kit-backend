@@ -1,19 +1,52 @@
+import { Entity, Column, PrimaryColumn } from 'typeorm';
+
+@Entity()
 export class SignedOrderModel {
-    public hash?: string;
-    public senderAddress?: string;
-    public makerAddress?: string;
-    public takerAddress?: string;
-    public makerAssetData?: string;
-    public takerAssetData?: string;
-    public exchangeAddress?: string;
-    public feeRecipientAddress?: string;
-    public expirationTimeSeconds?: number;
-    public makerFee?: string;
-    public takerFee?: string;
-    public makerAssetAmount?: string;
-    public takerAssetAmount?: string;
-    public salt?: string;
-    public signature?: string;
+    @PrimaryColumn()
+    hash?: string;
+
+    @Column()
+    senderAddress?: string;
+
+    @Column()
+    makerAddress?: string;
+
+    @Column()
+    takerAddress?: string;
+
+    @Column()
+    makerAssetData?: string;
+
+    @Column()
+    takerAssetData?: string;
+
+    @Column()
+    exchangeAddress?: string;
+
+    @Column()
+    feeRecipientAddress?: string;
+
+    @Column()
+    expirationTimeSeconds?: number;
+
+    @Column()
+    makerFee?: string;
+
+    @Column()
+    takerFee?: string;
+
+    @Column()
+    makerAssetAmount?: string;
+
+    @Column()
+    takerAssetAmount?: string;
+
+    @Column()
+    salt?: string;
+
+    @Column()
+    signature?: string;
+
     constructor(
         opts: {
             hash?: string;

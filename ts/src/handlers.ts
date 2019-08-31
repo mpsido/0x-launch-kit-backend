@@ -101,7 +101,7 @@ export class Handlers {
             validateAssetDataIsWhitelistedOrThrow(allowedTokens, signedOrder.takerAssetData, 'takerAssetData');
         }
         try {
-            await this._orderBook.addOrderAsync(signedOrder);
+            await this._orderBook.addOrderAsync(signedOrder, req.body.userId);
         } catch (err) {
             throw new ValidationError([
                 {

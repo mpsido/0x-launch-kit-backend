@@ -23,7 +23,7 @@ import { utils } from './utils';
     await handlers.initOrderBookAsync();
     const app = express();
     const corsOptions = {
-        origin: '*', // ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io'],
+        origin: ['http://localhost:3001', 'https://localhost:3001', 'https://d-ex.io', 'https://10.55.55.206:3001'],
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
         optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
     };
